@@ -1,0 +1,23 @@
+{
+  "name": "implot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build_page.js",
+  "watch": {
+    "build": {
+      "patterns": ["stylesheets", "views"],
+      "extensions": "scss,pug"
+    }
+  },
+  "scripts": {
+    "watch": "npm-watch build",
+    "build": "node build_page.js"
+  },
+  "author": "Divan Burger",
+  "dependencies": {
+    "async": "^2.5.0",
+    "node-sass": "^4.5.3",
+    "npm-watch": "^0.2.0",
+    "pug": "^2.0.0-beta6"
+  }
+}

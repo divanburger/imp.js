@@ -1,0 +1,23 @@
+doctype html
+html
+    head
+        title ImPlot test
+        link(rel="stylesheet", type="text/css", href="css/main.css")
+        script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js")
+        script(src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js")
+        script(src="lib/implot.js")
+    body
+        h1 ImPlot demo
+        .implot.graph#bar_graph
+
+        script(type="text/javascript").
+            var bar_graph = new ImPlot('#bar_graph', new ImPlotContext(), {
+                series: [
+                    {name: 'cpu_usage', graph_type: 'horizontal_bar'},
+                    {name: 'memory_usage', graph_type: 'line'}
+                ]
+            });
+            bar_graph.load_data([
+               [29, 51, 75, 97, 77, 44, 39, 2, 17, 99, 1, 90, 72, 19, 66, 43, 23, 40, 42, 22, 9, 82, 7, 83, 8, 38, 91, 74, 35, 11, 34, 21, 65, 80, 54, 95, 58, 14, 31, 53, 52, 60, 98, 25, 71, 12, 57, 50, 67, 62],
+               [37, 56, 13, 18, 49, 33, 4, 30, 20, 89, 76, 73, 79, 93, 16, 64, 15, 48, 24, 88, 63, 87, 28, 69, 32, 3, 61, 92, 68, 96, 41, 46, 86, 55, 85, 100, 94, 26, 81, 10, 27, 78, 6, 84, 45, 70, 36, 59, 47, 5]
+            ]);
