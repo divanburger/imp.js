@@ -5,7 +5,10 @@
   "main": "build_page.js",
   "watch": {
     "build": {
-      "patterns": ["stylesheets", "views"],
+      "patterns": [
+        "stylesheets",
+        "views"
+      ],
       "extensions": "scss,pug"
     }
   },

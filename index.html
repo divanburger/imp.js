@@ -36,10 +36,6 @@ var bar_graph = new ImPlot('#bar_graph', new ImPlotDefault(), {
         interval: 25
     }
 });
-bar_graph.push_data([
-   [29, 51, 75, 97, 77, 44, 39, 2, 17, 99, 1, 90, 72, 19, 66, 43, 23, 40, 42, 22, 9, 82, 7, 83, 8, 38, 91, 74, 35, 11, 34, 21, 65, 80, 54, 95, 58, 14, 31, 53, 52, 60, 98, 25, 71, 12, 57, 50, 67, 62],
-   [37, 56, 13, 18, 49, 33, 4, 30, 20, 89, 76, 73, 79, 93, 16, 64, 15, 48, 24, 88, 63, 87, 28, 69, 32, 3, 61, 92, 68, 96, 41, 46, 86, 55, 85, 100, 94, 26, 81, 10, 27, 78, 6, 84, 45, 70, 36, 59, 47, 5]
-]);
 
 ////
 
@@ -51,15 +47,15 @@ PieCharts.prototype = _.create(ImPlotDefault.prototype, {
     constructor: PieCharts
 });
 
-PieCharts.prototype.render_memory = function (config, data, pos, size) {
+PieCharts.prototype.render_memory = function (config, series, pos, size) {
     var circle = this.fit_circle_in_rect(pos, size, {x: 15, y: 15});
-    this.pie_chart(config, data, circle.pos, circle.radius);
+    this.pie_chart(config, series, circle.pos, circle.radius);
 };
 
-PieCharts.prototype.render_cpu = function (config, data, pos, size) {
+PieCharts.prototype.render_cpu = function (config, series, pos, size) {
     var circle = this.fit_circle_in_rect(pos, size, {x: 15, y: 15});
-    this.pie_ring_chart(config, data, circle.pos, circle.radius);
-    this.text_centered_at(config.center_text, Math.round(data[0]) + '%', this.center_of_rect(pos, size));
+    this.pie_ring_chart(config, series, circle.pos, circle.radius);
+    this.text_centered_at(config.center_text, Math.round(series.data[0]) + '%', this.center_of_rect(pos, size));
 };
 
 PieCharts.prototype.render = function (data) {
@@ -118,11 +114,32 @@ var pie_graphs = new ImPlot('#pie_graphs', new PieCharts(), {
     }
 });
 
-function simulate_pie_data() {
-    var cpu_usage = Math.random() * 100.0;
+/// Simulation
 
-    pie_graphs.push_data([[45, 35, 20], [cpu_usage, 100 - cpu_usage]]);
+var offset = 0;
+var bar_data = [];
+var line_data = [];
+
+for (var i = 0; i < 20; i++) {
+    bar_data.push(Math.random() * 100.0);
+    line_data.push(Math.random() * 100.0);
 }
 
-setInterval(simulate_pie_data, 2000);
-simulate_pie_data();</script></body></html>
+function simulate_data() {
+    var cpu_usage = Math.random() * 100.0;
+    pie_graphs.push_data([{data: [45, 35, 20]}, {data: [cpu_usage, 100 - cpu_usage]}]);
+
+    offset += 1;
+    bar_data = bar_data.slice();
+    bar_data.splice(0, 1);
+    bar_data.push(Math.random() * 100.0);
+
+    line_data = line_data.slice();
+    line_data.splice(0, 1);
+    line_data.push(Math.random() * 100.0);
+
+    bar_graph.push_data([{offset: offset, data: bar_data}, {offset: offset, data: line_data}]);
+}
+
+setInterval(simulate_data, 2000);
+simulate_data();</script></body></html>
