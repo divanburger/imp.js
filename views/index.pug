@@ -41,6 +41,11 @@ html
                             if (value < 50) return COLORS.forward_lighter;
                             if (value < 70) return COLORS.caution_lighter;
                             return COLORS.negative_lighter;
+                        },
+                        bar_hover_color: function (value) {
+                            if (value < 50) return COLORS.forward;
+                            if (value < 70) return COLORS.caution;
+                            return COLORS.negative;
                         }
                     },
                     {
@@ -101,9 +106,9 @@ html
             var pie_graphs = new ImPlot('#pie_graphs', pie_charts.render, {
                 memory: {
                     parts: [
-                        {name: 'Used', color: COLORS.positive_lighter, center_distance: 10.0},
-                        {name: 'Cache', color: COLORS.forward_lighter},
-                        {name: 'Free', color: COLORS.neutral}
+                        {name: 'Used', color: COLORS.positive_lighter, hover_color: COLORS.positive},
+                        {name: 'Cache', color: COLORS.forward_lighter, hover_color: COLORS.forward},
+                        {name: 'Free', color: COLORS.neutral, hover_color: COLORS.neutral}
                     ]
                 },
                 cpu: {
