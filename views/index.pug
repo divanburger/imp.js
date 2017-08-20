@@ -31,19 +31,20 @@ html
                 text: 'rgba(57, 65, 73, 1.0)'
             };
 
-            var bar_graph = new ImPlot('#bar_graph', new ImPlotDefault(), {
+            var bar_graph = new ImPlot('#bar_graph', ImPlot.basic_render, {
                 series: [
                     {
                         name: 'cpu_usage',
                         graph_type: 'horizontal_bar',
+                        maximum: 100,
                         bar_color: function (value) {
                             if (value < 50) return COLORS.forward_lighter;
-                            if (value < 75) return COLORS.caution_lighter;
+                            if (value < 70) return COLORS.caution_lighter;
                             return COLORS.negative_lighter;
                         }
                     },
                     {
-                        name: 'memory_usage', graph_type: 'line', smooth: true
+                        name: 'memory_usage', graph_type: 'line', smooth: true, maximum: 100
                     }
                 ],
                 grid: {
@@ -55,44 +56,49 @@ html
 
             ////
 
-            var PieCharts = function () {
-                ImPlotDefault.call(this);
+            math = ImPlot.math;
+
+            pie_charts = {
+                render_memory: function (ctx, config, series, pos, size) {
+                    var circle = math.fit_circle_in_rect(pos, size, {x: 15, y: 15});
+                    ctx.pie_chart(config, series, circle.pos, circle.radius);
+                },
+
+                render_cpu: function (ctx, config, series, pos, size) {
+                    var circle = math.fit_circle_in_rect(pos, size, {x: 15, y: 15});
+                    ctx.pie_ring_chart(config, series, circle.pos, circle.radius);
+                    ctx.text_centered_at(config.center_text, Math.round(series.data[0]) + '%', math.center_of_rect(pos, size));
+                },
+
+                render: function (ctx, data) {
+                    var width = ctx.instance.width;
+                    var half_width = ctx.instance.width / 2;
+                    var title_height = 30;
+                    var label_height = 30;
+                    var title_y = title_height * 0.5;
+                    var height = ctx.instance.height - label_height - title_height;
+                    var label_y = ctx.instance.height - label_height * 0.5;
+
+                    ctx.text_centered_striked(ctx.global_config.title_text, 'Statistics', {x: 0, y: 0}, {
+                        x: width,
+                        y: title_height
+                    });
+
+                    pie_charts.render_memory(ctx, ctx.global_config.memory, data[0], {x: 0, y: title_height}, {
+                        x: half_width,
+                        y: height
+                    });
+                    ctx.text_centered_at(ctx.global_config.label_text, 'Memory usage', {x: width * 0.25, y: label_y});
+
+                    pie_charts.render_cpu(ctx, ctx.global_config.cpu, data[1], {x: half_width, y: title_height}, {
+                        x: half_width,
+                        y: height
+                    });
+                    ctx.text_centered_at(ctx.global_config.label_text, 'CPU usage', {x: width * 0.75, y: label_y});
+                }
             };
 
-            PieCharts.prototype = _.create(ImPlotDefault.prototype, {
-                constructor: PieCharts
-            });
-
-            PieCharts.prototype.render_memory = function (config, series, pos, size) {
-                var circle = this.fit_circle_in_rect(pos, size, {x: 15, y: 15});
-                this.pie_chart(config, series, circle.pos, circle.radius);
-            };
-
-            PieCharts.prototype.render_cpu = function (config, series, pos, size) {
-                var circle = this.fit_circle_in_rect(pos, size, {x: 15, y: 15});
-                this.pie_ring_chart(config, series, circle.pos, circle.radius);
-                this.text_centered_at(config.center_text, Math.round(series.data[0]) + '%', this.center_of_rect(pos, size));
-            };
-
-            PieCharts.prototype.render = function (data) {
-                var width = this.instance.width;
-                var half_width = this.instance.width / 2;
-                var title_height = 30;
-                var label_height = 30;
-                var title_y = title_height * 0.5;
-                var height = this.instance.height - label_height - title_height;
-                var label_y = this.instance.height - label_height * 0.5;
-
-                this.text_centered_striked(this.global_config.title_text, 'Statistics', {x: 0, y: 0}, {x: width, y: title_height});
-
-                this.render_memory(this.global_config.memory, data[0], {x: 0, y: title_height}, {x: half_width, y: height});
-                this.text_centered_at(this.global_config.label_text, 'Memory usage', {x: width * 0.25, y: label_y});
-
-                this.render_cpu(this.global_config.cpu, data[1], {x: half_width, y: title_height}, {x: half_width, y: height});
-                this.text_centered_at(this.global_config.label_text, 'CPU usage', {x: width * 0.75, y: label_y});
-            };
-
-            var pie_graphs = new ImPlot('#pie_graphs', new PieCharts(), {
+            var pie_graphs = new ImPlot('#pie_graphs', pie_charts.render, {
                 memory: {
                     parts: [
                         {name: 'Used', color: COLORS.positive_lighter, center_distance: 10.0},
@@ -131,31 +137,60 @@ html
             });
 
             /// Simulation
+            sim = {
+                offset: 0,
+                bar_data: [],
+                line_data: [],
+                random: function (x, seed)
+                {
+                    var n = x * 1619 + seed * 6971;
+                    n = (n >> 8) ^ n;
+                    return ((n * (n * n * 60493 + 19990303) + 1376312589) & 0x7fffffff) / 2147483647.0;
+                },
+                interpolated_random: function (x, seed) {
+                    var i = Math.floor(x);
+                    var f = x - i;
+                    return sim.random(i, seed) * (1.0 - f) + sim.random(i + 1, seed) * (f);
+                },
+                octave_random: function (x, seed) {
+                    var persistence = 1.0;
+                    var factor = 1.0;
+                    var octaves = 4;
+                    var value = 0.0;
+                    var total = 0.0;
+                    for (var i = 0; i < octaves; i++) {
+                        value += sim.interpolated_random(x * factor, seed + i) * persistence;
+                        total += persistence;
 
-            var offset = 0;
-            var bar_data = [];
-            var line_data = [];
+                        factor *= 2.0;
+                        persistence *= 0.9;
+                    }
+                    return value / total;
+                },
+                init: function () {
+                    for (var i = 0; i < 20; i++) {
+                        sim.offset += 1;
+                        sim.bar_data.push(sim.octave_random(sim.offset * 0.2, 6) * 100.0);
+                        sim.line_data.push(sim.octave_random(sim.offset * 0.2, 8) * 100.0);
+                    }
+                    setInterval(sim.update, 2000);
+                    sim.update();
+                },
+                update: function () {
+                    var cpu_usage = Math.random() * 100.0;
+                    pie_graphs.push_data([{data: [45, 35, 20]}, {data: [cpu_usage, 100 - cpu_usage]}]);
 
-            for (var i = 0; i < 20; i++) {
-                bar_data.push(Math.random() * 100.0);
-                line_data.push(Math.random() * 100.0);
-            }
+                    sim.offset += 1;
+                    sim.bar_data = sim.bar_data.slice();
+                    sim.bar_data.splice(0, 1);
+                    sim.bar_data.push(sim.octave_random(sim.offset * 0.2, 6) * 100.0);
 
-            function simulate_data() {
-                var cpu_usage = Math.random() * 100.0;
-                pie_graphs.push_data([{data: [45, 35, 20]}, {data: [cpu_usage, 100 - cpu_usage]}]);
+                    sim.line_data = sim.line_data.slice();
+                    sim.line_data.splice(0, 1);
+                    sim.line_data.push(sim.octave_random(sim.offset * 0.2, 8) * 100.0);
 
-                offset += 1;
-                bar_data = bar_data.slice();
-                bar_data.splice(0, 1);
-                bar_data.push(Math.random() * 100.0);
+                    bar_graph.push_data([{offset: sim.offset, data: sim.bar_data}, {offset: sim.offset, data: sim.line_data}]);
+                }
+            };
 
-                line_data = line_data.slice();
-                line_data.splice(0, 1);
-                line_data.push(Math.random() * 100.0);
-
-                bar_graph.push_data([{offset: offset, data: bar_data}, {offset: offset, data: line_data}]);
-            }
-
-            setInterval(simulate_data, 2000);
-            simulate_data();
+            sim.init();
