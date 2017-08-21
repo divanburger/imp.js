@@ -6,7 +6,7 @@ html
         link(rel="stylesheet", type="text/css", href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css")
         script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js")
         script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
-        script(src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js")
+        script(src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js")
         script(src="lib/imp.js")
     body
         h1 Imp demo
@@ -54,7 +54,7 @@ html
                     ctx.horizontal_bar_series(config.cpu, graph_pos, graph_size, data[0]);
                     ctx.line_series(config.memory, graph_pos, graph_size, data[1]);
                 }
-            }
+            };
 
             var bar_graph = new Imp('#bar_graph', bar_charts.render, [
                     {series_type: Imp.SeriesType.MOVING},
@@ -103,7 +103,7 @@ html
                     var graph_size = new Vec(graph_width, size.y)
                     ctx.area_series(config.network, graph_pos, graph_size, data[0]);
                 }
-            }
+            };
 
             var area_graph = new Imp('#area_graph', area_charts.render, [
                     {series_type: Imp.SeriesType.MOVING}

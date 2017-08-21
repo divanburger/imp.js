@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><title>Imp test</title><link rel="stylesheet" type="text/css" href="css/main.css"><link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js"></script><script src="lib/imp.js"></script></head><body><h1>Imp demo</h1><div class="imp graph" id="bar_graph"></div><div class="imp graph" id="area_graph"></div><div class="imp graph" id="pie_graphs"></div><script type="text/javascript">var COLORS = {
+<!DOCTYPE html><html><head><title>Imp test</title><link rel="stylesheet" type="text/css" href="css/main.css"><link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script><script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script><script src="lib/imp.js"></script></head><body><h1>Imp demo</h1><div class="imp graph" id="bar_graph"></div><div class="imp graph" id="area_graph"></div><div class="imp graph" id="pie_graphs"></div><script type="text/javascript">var COLORS = {
     forward: 'rgba(39, 163, 221, 1.0)',
     forward_lighter: 'rgba(39, 163, 221, 0.5)',
 
@@ -37,7 +37,7 @@ bar_charts = {
         ctx.horizontal_bar_series(config.cpu, graph_pos, graph_size, data[0]);
         ctx.line_series(config.memory, graph_pos, graph_size, data[1]);
     }
-}
+};
 
 var bar_graph = new Imp('#bar_graph', bar_charts.render, [
         {series_type: Imp.SeriesType.MOVING},
@@ -86,7 +86,7 @@ area_charts = {
         var graph_size = new Vec(graph_width, size.y)
         ctx.area_series(config.network, graph_pos, graph_size, data[0]);
     }
-}
+};
 
 var area_graph = new Imp('#area_graph', area_charts.render, [
         {series_type: Imp.SeriesType.MOVING}
