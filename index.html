@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><title>Imp test</title><link rel="stylesheet" type="text/css" href="css/main.css"><link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script><script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script><script src="lib/imp.js"></script></head><body><h1>Imp demo</h1><div class="imp graph" id="bar_graph"></div><div class="imp graph" id="area_graph"></div><div class="imp graph" id="pie_graphs"></div><script type="text/javascript">var COLORS = {
+<!DOCTYPE html><html><head><title>Imp test</title><link rel="stylesheet" type="text/css" href="css/main.css"><link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script><script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script><script src="lib/imp.js"></script></head><body><h1>Imp demo</h1><div class="imp graph" id="bar_graph"></div><div class="imp graph" id="area_graph"></div><div class="imp graph" id="pie_graphs"></div><div class="imp graph" id="zoom_graph"></div><script type="text/javascript">var COLORS = {
     forward: 'rgba(39, 163, 221, 1.0)',
     forward_lighter: 'rgba(39, 163, 221, 0.5)',
 
@@ -220,6 +220,47 @@ var pie_graphs = new Imp('#pie_graphs', pie_charts.render, [
         }
     });
 
+zoom_chart = {
+    render: function (ctx, data) {
+        var config = _.defaults(ctx.global_config, {
+            label_width: 40,
+            slider_width: 40,
+            margin: 10
+        });
+
+        var pos = new Vec(config.margin, config.margin);
+        var size = new Vec(ctx.instance.width - config.margin * 2, ctx.instance.height - config.margin * 2);
+        var graph_width = size.x - config.label_width - config.slider_width;
+        ctx.horizontal_grid_with_labels(config.grid, pos, config.label_width, graph_width, size.y);
+
+        var graph_pos = pos.add(new Vec(config.label_width, 0));
+        var graph_size = new Vec(graph_width, size.y);
+        ctx.horizontal_bar_series(config.data, graph_pos, graph_size, data[0]);
+
+        var slider_pos = pos.add(new Vec(size.x - config.slider_width, 0.0));
+        var slider_size = new Vec(config.slider_width, size.y);
+        ctx.horizontal_slider(config.data, 'x_zoom_factor', 1.0, 1.0, 4.0, slider_pos, slider_size);
+    }
+};
+
+var zoom_graph = new Imp('#zoom_graph', zoom_chart.render, [
+        {series_type: Imp.SeriesType.STATIC}
+    ],
+    {
+        data: {
+            maximum: 100,
+            bar_color: COLORS.forward_lighter,
+            bar_hover_color: COLORS.forward
+        },
+        grid: {
+            maximum: 100,
+            minimum: 0,
+            interval: 25
+        }
+    });
+
+////
+
 /// Simulation
 sim = {
     offset: 0,
@@ -227,6 +268,7 @@ sim = {
     line_data: [],
     area1_data: [],
     area2_data: [],
+    static_data: [],
     random: function (x, seed) {
         var n = x * 1619 + seed * 6971;
         n = (n >> 8) ^ n;
@@ -259,7 +301,11 @@ sim = {
             sim.line_data.push(sim.octave_random(sim.offset * 0.2, 8) * 100.0);
             sim.area1_data.push(sim.octave_random(sim.offset * 0.2, 10) * 100.0);
             sim.area2_data.push(sim.octave_random(sim.offset * 0.2, 12) * 200.0 - 50.0);
+            sim.static_data.push(sim.octave_random(sim.offset * 0.2, 14) * 100);
         }
+
+        zoom_graph.push_data([{data: sim.static_data}]);
+
         setInterval(sim.update, 2000);
         sim.update();
     },
