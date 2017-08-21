@@ -21,7 +21,7 @@ function generateView(inFilename, outFilename, callback) {
 async.parallel([
     async.apply(generateView, 'views/index.pug', 'index.html'),
     async.apply(generateStylesheet, 'stylesheets/main.scss', 'css/main.css'),
-    async.apply(generateStylesheet, 'stylesheets/implot.scss', 'css/implot.css')
+    async.apply(generateStylesheet, 'stylesheets/imp.scss', 'css/imp.css')
 ], function (err) {
     if (err) throw err;
     console.log('Build complete');

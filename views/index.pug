@@ -1,17 +1,17 @@
 doctype html
 html
     head
-        title ImPlot test
+        title Imp test
         link(rel="stylesheet", type="text/css", href="css/main.css")
         link(rel="stylesheet", type="text/css", href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css")
         script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js")
         script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
         script(src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js")
-        script(src="lib/implot.js")
+        script(src="lib/imp.js")
     body
-        h1 ImPlot demo
-        .implot.graph#bar_graph
-        .implot.graph#pie_graphs
+        h1 Imp demo
+        .imp.graph#bar_graph
+        .imp.graph#pie_graphs
 
         script(type="text/javascript").
             var COLORS = {
@@ -31,9 +31,34 @@ html
                 text: 'rgba(57, 65, 73, 1.0)'
             };
 
-            var bar_graph = new ImPlot('#bar_graph', ImPlot.basic_render, {
-                series: [
-                    {
+            var Util = Imp.Util;
+            var Vec = Imp.Vec;
+
+            bar_charts = {
+                render: function (ctx, data) {
+                    var config = _.defaults(ctx.global_config, {
+                        label_width: 40,
+                        margin: 10
+                    });
+
+                    var pos = new Vec(config.margin, config.margin);
+                    var size = new Vec(ctx.instance.width - config.margin * 2, ctx.instance.height - config.margin * 2);
+                    var graph_width = size.x - config.label_width;
+                    ctx.horizontal_grid_with_labels(config.grid, pos, config.label_width, graph_width, size.y);
+
+                    var graph_pos = pos.add(new Vec(config.label_width, 0));
+                    var graph_size = new Vec(graph_width, size.y)
+                    ctx.horizontal_bar_series(config.cpu, graph_pos, graph_size, data[0]);
+                    ctx.line_series(config.memory, graph_pos, graph_size, data[1]);
+                }
+            }
+
+            var bar_graph = new Imp('#bar_graph', bar_charts.render, [
+                    {series_type: Imp.SeriesType.MOVING},
+                    {series_type: Imp.SeriesType.MOVING}
+                ],
+                {
+                    cpu: {
                         name: 'cpu_usage',
                         graph_type: 'horizontal_bar',
                         maximum: 100,
@@ -48,31 +73,28 @@ html
                             return COLORS.negative;
                         }
                     },
-                    {
+                    memory: {
                         name: 'memory_usage', graph_type: 'line', smooth: true, maximum: 100
+                    },
+                    grid: {
+                        maximum: 100,
+                        minimum: 0,
+                        interval: 25
                     }
-                ],
-                grid: {
-                    maximum: 100,
-                    minimum: 0,
-                    interval: 25
-                }
-            });
+                });
 
             ////
 
-            math = ImPlot.math;
-
             pie_charts = {
                 render_memory: function (ctx, config, series, pos, size) {
-                    var circle = math.fit_circle_in_rect(pos, size, {x: 15, y: 15});
+                    var circle = Util.fit_circle_in_rect(pos, size, new Vec(15, 15));
                     ctx.pie_chart(config, series, circle.pos, circle.radius);
                 },
 
                 render_cpu: function (ctx, config, series, pos, size) {
-                    var circle = math.fit_circle_in_rect(pos, size, {x: 15, y: 15});
+                    var circle = Util.fit_circle_in_rect(pos, size, new Vec(15, 15));
                     ctx.pie_ring_chart(config, series, circle.pos, circle.radius);
-                    ctx.text_centered_at(config.center_text, Math.round(series.data[0]) + '%', math.center_of_rect(pos, size));
+                    ctx.text_centered_at(config.center_text, Math.round(series.data[0]) + '%', Util.center_of_rect(pos, size));
                 },
 
                 render: function (ctx, data) {
@@ -80,74 +102,67 @@ html
                     var half_width = ctx.instance.width / 2;
                     var title_height = 30;
                     var label_height = 30;
-                    var title_y = title_height * 0.5;
                     var height = ctx.instance.height - label_height - title_height;
                     var label_y = ctx.instance.height - label_height * 0.5;
 
-                    ctx.text_centered_striked(ctx.global_config.title_text, 'Statistics', {x: 0, y: 0}, {
-                        x: width,
-                        y: title_height
-                    });
+                    ctx.text_centered_striked(ctx.global_config.title_text, 'Statistics', new Vec(0, 0), new Vec(width, title_height));
 
-                    pie_charts.render_memory(ctx, ctx.global_config.memory, data[0], {x: 0, y: title_height}, {
-                        x: half_width,
-                        y: height
-                    });
-                    ctx.text_centered_at(ctx.global_config.label_text, 'Memory usage', {x: width * 0.25, y: label_y});
+                    pie_charts.render_memory(ctx, ctx.global_config.memory, data[0], new Vec(0, title_height), new Vec(half_width, height));
+                    ctx.text_centered_at(ctx.global_config.label_text, 'Memory usage', new Vec(width * 0.25, label_y));
 
-                    pie_charts.render_cpu(ctx, ctx.global_config.cpu, data[1], {x: half_width, y: title_height}, {
-                        x: half_width,
-                        y: height
-                    });
-                    ctx.text_centered_at(ctx.global_config.label_text, 'CPU usage', {x: width * 0.75, y: label_y});
+                    pie_charts.render_cpu(ctx, ctx.global_config.cpu, data[1], new Vec(half_width, title_height), new Vec(half_width, height));
+                    ctx.text_centered_at(ctx.global_config.label_text, 'CPU usage', new Vec(width * 0.75, label_y));
                 }
             };
 
-            var pie_graphs = new ImPlot('#pie_graphs', pie_charts.render, {
-                memory: {
-                    parts: [
-                        {name: 'Used', color: COLORS.positive_lighter, hover_color: COLORS.positive},
-                        {name: 'Cache', color: COLORS.forward_lighter, hover_color: COLORS.forward},
-                        {name: 'Free', color: COLORS.neutral, hover_color: COLORS.neutral}
-                    ]
-                },
-                cpu: {
-                    gap: 0.5,
-                    parts:[
-                        {color: COLORS.forward_lighter},
-                        {color: COLORS.neutral}
-                    ],
-                    center_text: {
-                        text_size: 24,
+            var pie_graphs = new Imp('#pie_graphs', pie_charts.render, [
+                    {series_type: Imp.SeriesType.STATIC},
+                    {series_type: Imp.SeriesType.DYNAMIC}
+                ],
+                {
+                    memory: {
+                        parts: [
+                            {name: 'Used', color: COLORS.positive_lighter, hover_color: COLORS.positive},
+                            {name: 'Cache', color: COLORS.forward_lighter, hover_color: COLORS.forward},
+                            {name: 'Free', color: COLORS.neutral, hover_color: COLORS.neutral}
+                        ]
+                    },
+                    cpu: {
+                        gap: 0.5,
+                        parts: [
+                            {color: COLORS.forward_lighter},
+                            {color: COLORS.neutral}
+                        ],
+                        center_text: {
+                            text_size: 24,
+                            text_font: 'sans',
+                            text_color: COLORS.text
+                        },
+                        inner_radius: function (radius, index) {
+                            return index == 0 ? radius * 0.5 : radius * 0.6;
+                        },
+                        outer_radius: function (radius, index) {
+                            return index == 0 ? radius * 1.0 : radius * 0.9;
+                        }
+                    },
+                    title_text: {
+                        text_size: 16,
                         text_font: 'sans',
-                        text_color: COLORS.text
+                        text_color: '#888'
                     },
-                    inner_radius: function (radius, index) {
-                        return index == 0 ? radius * 0.5 : radius * 0.6;
-                    },
-                    outer_radius: function (radius, index) {
-                        return index == 0 ? radius : radius * 0.9;
+                    label_text: {
+                        text_size: 14,
+                        text_font: 'sans',
+                        text_color: '#AAA'
                     }
-                },
-                title_text: {
-                    text_size: 16,
-                    text_font: 'sans',
-                    text_color: '#888'
-                },
-                label_text: {
-                    text_size: 14,
-                    text_font: 'sans',
-                    text_color: '#AAA'
-                }
-            });
+                });
 
             /// Simulation
             sim = {
                 offset: 0,
                 bar_data: [],
                 line_data: [],
-                random: function (x, seed)
-                {
+                random: function (x, seed) {
                     var n = x * 1619 + seed * 6971;
                     n = (n >> 8) ^ n;
                     return ((n * (n * n * 60493 + 19990303) + 1376312589) & 0x7fffffff) / 2147483647.0;
@@ -194,7 +209,10 @@ html
                     sim.line_data.splice(0, 1);
                     sim.line_data.push(sim.octave_random(sim.offset * 0.2, 8) * 100.0);
 
-                    bar_graph.push_data([{offset: sim.offset, data: sim.bar_data}, {offset: sim.offset, data: sim.line_data}]);
+                    bar_graph.push_data([{offset: sim.offset, data: sim.bar_data}, {
+                        offset: sim.offset,
+                        data: sim.line_data
+                    }]);
                 }
             };
 
