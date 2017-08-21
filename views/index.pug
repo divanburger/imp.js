@@ -100,20 +100,28 @@ html
                     ctx.horizontal_grid_with_labels(config.grid, pos, config.label_width, graph_width, size.y);
 
                     var graph_pos = pos.add(new Vec(config.label_width, 0));
-                    var graph_size = new Vec(graph_width, size.y)
-                    ctx.area_series(config.network, graph_pos, graph_size, data[0]);
+                    var graph_size = new Vec(graph_width, size.y);
+                    ctx.area_series(config.network_send, graph_pos, graph_size, data[0]);
+                    ctx.area_series(config.network_receive, graph_pos, graph_size, data[1]);
                 }
             };
 
             var area_graph = new Imp('#area_graph', area_charts.render, [
+                    {series_type: Imp.SeriesType.MOVING},
                     {series_type: Imp.SeriesType.MOVING}
                 ],
                 {
-                    network: {
+                    network_send: {
                         maximum: 100,
                         smooth: true,
                         color: COLORS.forward_lighter,
                         outline_color: COLORS.forward
+                    },
+                    network_receive: {
+                        maximum: 100,
+                        smooth: true,
+                        color: COLORS.caution_lighter,
+                        outline_color: COLORS.caution
                     },
                     grid: {
                         maximum: 100,
@@ -233,8 +241,9 @@ html
             sim = {
                 offset: 0,
                 bar_data: [],
-                area_data: [],
                 line_data: [],
+                area1_data: [],
+                area2_data: [],
                 random: function (x, seed) {
                     var n = x * 1619 + seed * 6971;
                     n = (n >> 8) ^ n;
@@ -265,7 +274,8 @@ html
                         sim.offset += 1;
                         sim.bar_data.push(sim.octave_random(sim.offset * 0.2, 6) * 100.0);
                         sim.line_data.push(sim.octave_random(sim.offset * 0.2, 8) * 100.0);
-                        sim.area_data.push(sim.octave_random(sim.offset * 0.2, 10) * 100.0);
+                        sim.area1_data.push(sim.octave_random(sim.offset * 0.2, 10) * 100.0);
+                        sim.area2_data.push(sim.octave_random(sim.offset * 0.2, 12) * 200.0 - 50.0);
                     }
                     setInterval(sim.update, 2000);
                     sim.update();
@@ -294,10 +304,13 @@ html
                         data: sim.line_data
                     }]);
 
-                    sim.area_data = sim.area_data.slice();
-                    sim.area_data.splice(0, 1);
-                    sim.area_data.push(sim.octave_random(sim.offset * 0.2, 10) * 100.0);
-                    area_graph.push_data([{offset: sim.offset, data: sim.area_data}]);
+                    sim.area1_data = sim.area1_data.slice();
+                    sim.area1_data.splice(0, 1);
+                    sim.area1_data.push(sim.octave_random(sim.offset * 0.2, 10) * 100.0);
+                    sim.area2_data = sim.area2_data.slice();
+                    sim.area2_data.splice(0, 1);
+                    sim.area2_data.push(sim.octave_random(sim.offset * 0.2, 12) * 200.0 - 50.0);
+                    area_graph.push_data([{offset: sim.offset, data: sim.area1_data}, {offset: sim.offset, data: sim.area2_data}]);
                 }
             };
 
