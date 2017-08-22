@@ -1,0 +1,88 @@
+doctype html
+html
+    head
+        title Imp color test
+        script(src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js")
+        script(src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js")
+        script(src="lib/imp-color.js")
+    body
+        h1 Imp color demo
+        div
+            a(href="index.html") Graph demo
+        div
+            canvas#colors(width=1200, height=600)
+
+        script(type="text/javascript").
+            window.requestAnimationFrame(function () {
+                var ctx = $('#colors')[0].getContext('2d');
+
+                for (var il = 0; il < 3; il++) {
+
+                    for (var ic = 0; ic < 200; ic++)
+                        for (var ih = 0; ih < 200; ih++) {
+                            var l = 25 + il * 25;
+                            var c = ic / 200.0 * 140.0;
+                            var h = (ih / 100 - 1) * Math.PI;
+
+                            var srgb = ImpColor.lch_to_srgb(new ImpColor.LCHColor(l, c, h));
+
+                            if (srgb.r > 1.0 || srgb.r < 0.0 || srgb.g > 1.0 || srgb.g < 0.0 || srgb.b > 1.0 || srgb.b < 0.0) {
+
+                            } else {
+                                ctx.fillStyle = ImpColor.srgb_to_rgb_string(srgb);
+                                ctx.fillRect(ic, ih + il * 200, 1, 1);
+                            }
+                        }
+                }
+
+                for (var il = 0; il < 3; il++) {
+                    var v = [];
+
+                    for (var i = 0; i < 25; i++) {
+                        var l = 25 + il * 25;
+                        var c = 50;
+                        var h = (i * 0.618033988749895) * 2.0 * Math.PI;
+                        var srgb = ImpColor.lch_to_srgb(new ImpColor.LCHColor(l, c, h));
+
+                        ctx.fillStyle = ImpColor.srgb_to_rgb_string(srgb);
+                        v.push(ctx.fillStyle);
+                        ctx.fillRect(300 + 50 * il, i * 24, 40, 20);
+                    }
+                }
+
+                for (var il = 0; il < 3; il++) {
+                    var v = [];
+
+                    for (var i = 0; i < 25; i++) {
+                        var l = 75;
+                        var c = 25 + il * 25;
+                        var h = (i * 0.618033988749895) * 2.0 * Math.PI;
+                        var srgb = ImpColor.lch_to_srgb(new ImpColor.LCHColor(l, c, h));
+
+                        ctx.fillStyle = ImpColor.srgb_to_rgb_string(srgb);
+                        v.push(ctx.fillStyle);
+                        ctx.fillRect(500 + 50 * il, i * 24, 40, 20);
+                    }
+                }
+
+                for (var i = 0; i < 25; i++) {
+                    var k = ((i % 5) * 0.618033988749895) * Math.PI * 2.0;
+
+                    var l = Math.cos(k) * 25.0 + 70.0;
+                    var c = Math.sin(k) * 30.0 + 70.0;
+                    var h = Math.floor(i / (Math.PI * 2.0));
+                    var srgb = ImpColor.lch_to_srgb(new ImpColor.LCHColor(l, c, h));
+                    var lmin = Math.min(srgb.r, srgb.g, srgb.b, 0.0);
+                    var lmax = Math.max(srgb.r, srgb.g, srgb.b, 1.0) - lmin;
+                    //srgb.r = (srgb.r - lmin) / lmax;
+                    //srgb.g = (srgb.g - lmin) / lmax;
+                    //srgb.b = (srgb.b - lmin) / lmax;
+
+                    //if (srgb.r > 1.0 || srgb.r < 0.0 || srgb.g > 1.0 || srgb.g < 0.0 || srgb.b > 1.0 || srgb.b < 0.0) {
+
+                    //} else {
+                        ctx.fillStyle = ImpColor.srgb_to_rgb_string(srgb);
+                        ctx.fillRect(700, i * 24, 200, 20);
+                    //}
+                }
+            });

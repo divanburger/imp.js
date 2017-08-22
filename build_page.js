@@ -20,6 +20,7 @@ function generateView(inFilename, outFilename, callback) {
 
 async.parallel([
     async.apply(generateView, 'views/index.pug', 'index.html'),
+    async.apply(generateView, 'views/colors.pug', 'colors.html'),
     async.apply(generateStylesheet, 'stylesheets/main.scss', 'css/main.css'),
     async.apply(generateStylesheet, 'stylesheets/imp.scss', 'css/imp.css')
 ], function (err) {
