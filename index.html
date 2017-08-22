@@ -116,9 +116,13 @@ var area_graph = new Imp('#area_graph', area_charts.render, [
 ////
 
 pie_charts = {
-    render_memory: function (ctx, config, series, pos, size) {
+    render_memory1: function (ctx, config, series, pos, size) {
         var circle = Util.fit_circle_in_rect(pos, size, new Vec(15, 15));
         ctx.pie_chart(config, series, circle.pos, circle.radius);
+    },
+
+    render_memory2: function (ctx, config, series, pos, size) {
+        ctx.pie_chart_with_side_labels(config, series, pos, size);
     },
 
     render_cpu: function (ctx, config, series, pos, size) {
@@ -134,22 +138,27 @@ pie_charts = {
 
     render: function (ctx, data) {
         var width = ctx.instance.width;
-        var part_width = ctx.instance.width / 3;
+        var part_width = ctx.instance.width / 4;
         var title_height = 30;
         var label_height = 30;
         var height = ctx.instance.height - label_height - title_height;
         var label_y = ctx.instance.height - label_height * 0.5;
 
+        ctx.global_config.memory.start_angle += ctx.delta * 0.0005;
+
         ctx.text_centered_striked(ctx.global_config.title_text, 'Statistics', new Vec(0, 0), new Vec(width, title_height));
 
-        pie_charts.render_memory(ctx, ctx.global_config.memory, data[0], new Vec(0, title_height), new Vec(part_width, height));
-        ctx.text_centered_at(ctx.global_config.label_text, 'Memory usage', new Vec(part_width * 0.5, label_y));
+        pie_charts.render_memory1(ctx, ctx.global_config.memory, data[0], new Vec(0, title_height), new Vec(part_width, height));
+        ctx.text_centered_at(ctx.global_config.label_text, 'Memory usage 1', new Vec(part_width * 0.5, label_y));
 
-        pie_charts.render_cpu(ctx, ctx.global_config.cpu, data[1], new Vec(part_width, title_height), new Vec(part_width, height));
-        ctx.text_centered_at(ctx.global_config.label_text, 'CPU usage', new Vec(part_width * 1.5, label_y));
+        pie_charts.render_memory2(ctx, ctx.global_config.memory, data[0], new Vec(part_width, title_height), new Vec(part_width, height));
+        ctx.text_centered_at(ctx.global_config.label_text, 'Memory usage 2', new Vec(part_width * 1.5, label_y));
 
-        pie_charts.render_network(ctx, ctx.global_config.network, data[2], new Vec(part_width * 2, title_height), new Vec(part_width, height));
-        ctx.text_centered_at(ctx.global_config.label_text, 'Network usage', new Vec(part_width * 2.5, label_y));
+        pie_charts.render_cpu(ctx, ctx.global_config.cpu, data[1], new Vec(part_width * 2, title_height), new Vec(part_width, height));
+        ctx.text_centered_at(ctx.global_config.label_text, 'CPU usage', new Vec(part_width * 2.5, label_y));
+
+        pie_charts.render_network(ctx, ctx.global_config.network, data[2], new Vec(part_width * 3, title_height), new Vec(part_width, height));
+        ctx.text_centered_at(ctx.global_config.label_text, 'Network usage', new Vec(part_width * 3.5, label_y));
     }
 };
 
@@ -160,9 +169,14 @@ var pie_graphs = new Imp('#pie_graphs', pie_charts.render, [
     ],
     {
         memory: {
+            start_angle: 0,
             parts: [
-                {name: 'Used', color: COLORS.positive_lighter, hover_color: COLORS.positive},
+                {name: 'Kernel', color: COLORS.positive_lighter, hover_color: COLORS.positive},
+                {name: 'Driver', color: COLORS.caution_lighter, hover_color: COLORS.caution},
+                {name: 'Used', color: COLORS.forward_lighter, hover_color: COLORS.forward},
+                {name: 'Used (Volatile)', color: COLORS.negative_lighter, hover_color: COLORS.negative},
                 {name: 'Cache', color: COLORS.forward_lighter, hover_color: COLORS.forward},
+                {name: 'Other', color: COLORS.caution_lighter, hover_color: COLORS.caution},
                 {name: 'Free', color: COLORS.neutral, hover_color: COLORS.neutral}
             ]
         },
@@ -316,7 +330,7 @@ sim = {
         var net_receive = Math.random() * (100.0 - net_send);
         var net_rest = 100.0 - net_send - net_receive;
 
-        pie_graphs.push_data([{data: [45, 35, 20]}, {data: [cpu_usage, 100 - cpu_usage]}, {data: [net_send, net_receive, net_rest]}]);
+        pie_graphs.push_data([{data: [5, 10, 15, 20, 30, 10, 10]}, {data: [cpu_usage, 100 - cpu_usage]}, {data: [net_send, net_receive, net_rest]}]);
 
         sim.offset += 1;
 
