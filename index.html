@@ -1,4 +1,4 @@
-<!DOCTYPE html><html><head><title>Imp test</title><link rel="stylesheet" type="text/css" href="css/main.css"><link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script><script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script><script src="lib/imp.js"></script><script src="lib/imp-color.js"></script></head><body><h1>Imp demo</h1><div><a href="colors.html">Color demo</a></div><div class="imp graph" id="bar_graph"></div><div class="imp graph" id="area_graph"></div><div class="imp graph" id="pie_graphs"></div><div class="imp graph" id="zoom_graph"></div><script type="text/javascript">var COLORS = {
+<!DOCTYPE html><html><head><title>Imp test</title><link rel="stylesheet" type="text/css" href="css/main.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script><script src="lib/imp.js"></script></head><body><h1>Imp demo</h1><div><a href="colors.html">Color demo</a></div><div class="imp graph" id="bar_graph"></div><div class="imp graph" id="area_graph"></div><div class="imp graph" id="pie_graphs"></div><div class="imp graph" id="zoom_graph"></div><script type="text/javascript">var COLORS = {
     forward: 'rgba(39, 163, 221, 1.0)',
     forward_lighter: 'rgba(39, 163, 221, 0.5)',
 
@@ -28,7 +28,7 @@ bar_charts = {
         });
 
         var pos = new Vec(config.margin, config.margin);
-        var size = new Vec(ctx.instance.width - config.margin * 2, ctx.instance.height - config.margin * 2);
+        var size = new Vec(ctx.instance.size.x - config.margin * 2, ctx.instance.size.y - config.margin * 2);
         var graph_width = size.x - config.label_width;
         ctx.horizontal_grid_with_labels(config.grid, pos, config.label_width, graph_width, size.y);
 
@@ -78,7 +78,7 @@ area_charts = {
         });
 
         var pos = new Vec(config.margin, config.margin);
-        var size = new Vec(ctx.instance.width - config.margin * 2, ctx.instance.height - config.margin * 2);
+        var size = new Vec(ctx.instance.size.x - config.margin * 2, ctx.instance.size.y - config.margin * 2);
         var graph_width = size.x - config.label_width;
         ctx.horizontal_grid_with_labels(config.grid, pos, config.label_width, graph_width, size.y);
 
@@ -137,12 +137,12 @@ pie_charts = {
     },
 
     render: function (ctx, data) {
-        var width = ctx.instance.width;
-        var part_width = ctx.instance.width / 4;
+        var width = ctx.instance.size.x;
+        var part_width = ctx.instance.size.x / 4;
         var title_height = 30;
         var label_height = 30;
-        var height = ctx.instance.height - label_height - title_height;
-        var label_y = ctx.instance.height - label_height * 0.5;
+        var height = ctx.instance.size.y - label_height - title_height;
+        var label_y = ctx.instance.size.y - label_height * 0.5;
 
         ctx.global_config.memory.start_angle += ctx.delta * 0.0005;
 
@@ -243,13 +243,14 @@ zoom_chart = {
         });
 
         var pos = new Vec(config.margin, config.margin);
-        var size = new Vec(ctx.instance.width - config.margin * 2, ctx.instance.height - config.margin * 2);
+        var size = new Vec(ctx.instance.size.x - config.margin * 2, ctx.instance.size.y - config.margin * 2);
         var graph_width = size.x - config.label_width - config.slider_width;
         ctx.horizontal_grid_with_labels(config.grid, pos, config.label_width, graph_width, size.y);
 
+        debugger;
         var graph_pos = pos.add(new Vec(config.label_width, 0));
         var graph_size = new Vec(graph_width, size.y);
-        ctx.horizontal_bar_series(config.data, graph_pos, graph_size, data[0]);
+        ctx.stacked_horizontal_bar_series(config.data, graph_pos, graph_size, data[0]);
 
         var slider_pos = pos.add(new Vec(size.x - config.slider_width, 0.0));
         var slider_size = new Vec(config.slider_width, size.y);
@@ -257,19 +258,24 @@ zoom_chart = {
     }
 };
 
+var zoom_graph_color_func = function (value, index) {
+    var colors = [COLORS.forward, COLORS.caution, COLORS.positive, COLORS.negative, COLORS.forward_lighter];
+    return colors[index % colors.length];
+}
+
 var zoom_graph = new Imp('#zoom_graph', zoom_chart.render, [
         {series_type: Imp.SeriesType.STATIC}
     ],
     {
         data: {
-            maximum: 100,
-            bar_color: COLORS.forward_lighter,
-            bar_hover_color: COLORS.forward
+            maximum: 400,
+            bar_color: zoom_graph_color_func,
+            bar_hover_color: zoom_graph_color_func
         },
         grid: {
-            maximum: 100,
+            maximum: 400,
             minimum: 0,
-            interval: 25
+            interval: 100
         }
     });
 
@@ -315,7 +321,12 @@ sim = {
             sim.line_data.push(sim.octave_random(sim.offset * 0.2, 8) * 100.0);
             sim.area1_data.push(sim.octave_random(sim.offset * 0.2, 10) * 100.0);
             sim.area2_data.push(sim.octave_random(sim.offset * 0.2, 12) * 200.0 - 50.0);
-            sim.static_data.push(sim.octave_random(sim.offset * 0.2, 14) * 100);
+
+            var static_data_value = [];
+            for (var j = 0; j < 5; j++) {
+                static_data_value.push(Math.round(sim.random(sim.offset, 14 + j) * 80) + 10);
+            }
+            sim.static_data.push(static_data_value);
         }
 
         zoom_graph.push_data([{data: sim.static_data}]);

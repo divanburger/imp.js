@@ -1,23 +1,43 @@
-<!DOCTYPE html><html><head><title>Imp color test</title><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script><script src="lib/imp-color.js"></script></head><body><h1>Imp color demo</h1><div><a href="index.html">Graph demo</a></div><div><canvas id="colors" width="1200" height="600"></canvas></div><script type="text/javascript">window.requestAnimationFrame(function () {
+<!DOCTYPE html><html><head><title>Imp color test</title><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script><script src="lib/imp.js"></script></head><body><h1>Imp color demo</h1><div><a href="index.html">Graph demo</a></div><div><canvas id="colors" width="1200" height="800"></canvas></div><script type="text/javascript">window.requestAnimationFrame(function () {
+    var Color = Imp.Color;
+    var Palette = Imp.Palette;
+
     var ctx = $('#colors')[0].getContext('2d');
 
-    for (var il = 0; il < 3; il++) {
+    for (var il = 0; il < 4; il++) {
+        var last_x = -1.0;
 
-        for (var ic = 0; ic < 200; ic++)
-            for (var ih = 0; ih < 200; ih++) {
-                var l = 25 + il * 25;
+        for (var ih = 0; ih < 200; ih++) {
+            var cur_x = -1.0;
+
+            for (var ic = 0; ic < 180; ic++) {
+                var l = 20 + il * 20;
                 var c = ic / 200.0 * 140.0;
                 var h = (ih / 100 - 1) * Math.PI;
 
-                var srgb = ImpColor.lch_to_srgb(new ImpColor.LCHColor(l, c, h));
+                var rgb = Color.lch_to_linear_rgb(new Color.LCHColor(l, c, h));
+                var lrgb = Color.limit_linear_rgb(rgb);
+                var srgb = Color.linear_rgb_to_srgb(lrgb);
 
-                if (srgb.r > 1.0 || srgb.r < 0.0 || srgb.g > 1.0 || srgb.g < 0.0 || srgb.b > 1.0 || srgb.b < 0.0) {
-
-                } else {
-                    ctx.fillStyle = ImpColor.srgb_to_rgb_string(srgb);
-                    ctx.fillRect(ic, ih + il * 200, 1, 1);
+                if (rgb.r > 1.0 || rgb.r < 0.0 || rgb.g > 1.0 || rgb.g < 0.0 || rgb.b > 1.0 || rgb.b < 0.0) {
+                    if (cur_x < 0.0) cur_x = ic;
                 }
+                ctx.fillStyle = Color.srgb_to_rgb_string(srgb);
+                ctx.fillRect(ic, ih + il * 200, 1, 1);
             }
+
+            if (cur_x < 0.0) cur_x = 200;
+
+            if (last_x >= 0.0) {
+                ctx.strokeStyle = 'black';
+                ctx.beginPath();
+                ctx.moveTo(last_x, ih - 1 + il * 200);
+                ctx.lineTo(cur_x, ih + il * 200);
+                ctx.stroke();
+            }
+
+            last_x = cur_x;
+        }
     }
 
     for (var il = 0; il < 3; il++) {
@@ -27,9 +47,9 @@
             var l = 25 + il * 25;
             var c = 50;
             var h = (i * 0.618033988749895) * 2.0 * Math.PI;
-            var srgb = ImpColor.lch_to_srgb(new ImpColor.LCHColor(l, c, h));
+            var srgb = Color.lch_to_srgb(new Color.LCHColor(l, c, h));
 
-            ctx.fillStyle = ImpColor.srgb_to_rgb_string(srgb);
+            ctx.fillStyle = Color.srgb_to_rgb_string(srgb);
             v.push(ctx.fillStyle);
             ctx.fillRect(300 + 50 * il, i * 24, 40, 20);
         }
@@ -42,32 +62,54 @@
             var l = 75;
             var c = 25 + il * 25;
             var h = (i * 0.618033988749895) * 2.0 * Math.PI;
-            var srgb = ImpColor.lch_to_srgb(new ImpColor.LCHColor(l, c, h));
+            var srgb = Color.lch_to_srgb(new Color.LCHColor(l, c, h));
 
-            ctx.fillStyle = ImpColor.srgb_to_rgb_string(srgb);
+            ctx.fillStyle = Color.srgb_to_rgb_string(srgb);
             v.push(ctx.fillStyle);
             ctx.fillRect(500 + 50 * il, i * 24, 40, 20);
         }
     }
 
     for (var i = 0; i < 25; i++) {
-        var k = ((i % 5) * 0.618033988749895) * Math.PI * 2.0;
+        var srgb = Color.rgb_string_to_srgb(Palette.solarized[i % Palette.solarized.length]);
+        var lab = Color.srgb_to_lab(srgb);
+        lab.l += 30;
+        var rgb = Color.lab_to_linear_rgb(lab);
+        var msrgb = Color.linear_rgb_to_srgb(rgb);
 
-        var l = Math.cos(k) * 25.0 + 70.0;
-        var c = Math.sin(k) * 30.0 + 70.0;
-        var h = Math.floor(i / (Math.PI * 2.0));
-        var srgb = ImpColor.lch_to_srgb(new ImpColor.LCHColor(l, c, h));
-        var lmin = Math.min(srgb.r, srgb.g, srgb.b, 0.0);
-        var lmax = Math.max(srgb.r, srgb.g, srgb.b, 1.0) - lmin;
-        //srgb.r = (srgb.r - lmin) / lmax;
-        //srgb.g = (srgb.g - lmin) / lmax;
-        //srgb.b = (srgb.b - lmin) / lmax;
+        var lrgb = Color.limit_linear_rgb(rgb);
+        var lsrgb = Color.linear_rgb_to_srgb(lrgb);
 
-        //if (srgb.r > 1.0 || srgb.r < 0.0 || srgb.g > 1.0 || srgb.g < 0.0 || srgb.b > 1.0 || srgb.b < 0.0) {
+        ctx.fillStyle = Color.srgb_to_rgb_string(srgb);
+        ctx.fillRect(700, i * 24, 50, 20);
+        ctx.fillStyle = Color.srgb_to_rgb_string(lsrgb);
+        ctx.fillRect(750, i * 24, 50, 20);
+    }
 
-        //} else {
-            ctx.fillStyle = ImpColor.srgb_to_rgb_string(srgb);
-            ctx.fillRect(700, i * 24, 200, 20);
-        //}
+    var kp = [[-0.2, 2.2], [3.0, -1.2], [6.0, -2.2], [5.5, 2.0]];
+
+    for (var k = 0; k < 4; k++) {
+        for (var i = 0; i < 12; i++) {
+            var srgb = Color.generate_color(i, 11.0, kp[k][0], kp[k][1]);
+
+            var lum = 0.2126 * srgb.r + 0.7152 * srgb.g + 0.0722 * srgb.b;
+
+            var above_ratio = (1.0 - lum) / (Math.max(srgb.r, srgb.g, srgb.b, 1.0) - lum);
+            var below_ratio = (0.0 - lum) / (Math.min(srgb.r, srgb.g, srgb.b, 0.0) - lum);
+            var ratio = Math.min(above_ratio, below_ratio);
+            var rlum = lum * (1.0 - ratio);
+
+            var msrgb = new Color.RGBColor(srgb.r * ratio + rlum, srgb.g * ratio + rlum, srgb.b * ratio + rlum);
+
+            if (srgb.r > 1.0 || srgb.r < 0.0 || srgb.g > 1.0 || srgb.g < 0.0 || srgb.b > 1.0 || srgb.b < 0.0) {
+                ctx.fillStyle = Color.srgb_to_rgb_string(srgb);
+                ctx.fillRect(900 + k * 60, i * 50, 10, 45);
+                ctx.fillStyle = Color.srgb_to_rgb_string(msrgb);
+                ctx.fillRect(910 + k * 60, i * 50, 40, 45);
+            } else {
+                ctx.fillStyle = Color.srgb_to_rgb_string(srgb);
+                ctx.fillRect(900 + k * 60, i * 50, 50, 45);
+            }
+        }
     }
 });</script></body></html>
