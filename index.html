@@ -148,11 +148,15 @@ pie_charts = {
 
         ctx.text_centered_striked(ctx.global_config.title_text, 'Statistics', new Vec(0, 0), new Vec(width, title_height));
 
+        ctx.push_id('mem1');
         pie_charts.render_memory1(ctx, ctx.global_config.memory, data[0], new Vec(0, title_height), new Vec(part_width, height));
         ctx.text_centered_at(ctx.global_config.label_text, 'Memory usage 1', new Vec(part_width * 0.5, label_y));
+        ctx.pop_id();
 
+        ctx.push_id('mem2');
         pie_charts.render_memory2(ctx, ctx.global_config.memory, data[0], new Vec(part_width, title_height), new Vec(part_width, height));
         ctx.text_centered_at(ctx.global_config.label_text, 'Memory usage 2', new Vec(part_width * 1.5, label_y));
+        ctx.pop_id();
 
         pie_charts.render_cpu(ctx, ctx.global_config.cpu, data[1], new Vec(part_width * 2, title_height), new Vec(part_width, height));
         ctx.text_centered_at(ctx.global_config.label_text, 'CPU usage', new Vec(part_width * 2.5, label_y));
@@ -232,6 +236,8 @@ var pie_graphs = new Imp('#pie_graphs', pie_charts.render, [
             text_font: 'sans',
             text_color: '#AAA'
         }
+    }, {
+        dirty_tracking: false
     });
 
 zoom_chart = {
@@ -247,7 +253,6 @@ zoom_chart = {
         var graph_width = size.x - config.label_width - config.slider_width;
         ctx.horizontal_grid_with_labels(config.grid, pos, config.label_width, graph_width, size.y);
 
-        debugger;
         var graph_pos = pos.add(new Vec(config.label_width, 0));
         var graph_size = new Vec(graph_width, size.y);
         ctx.stacked_horizontal_bar_series(config.data, graph_pos, graph_size, data[0]);

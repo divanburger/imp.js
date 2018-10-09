@@ -1,5 +1,6 @@
-<!DOCTYPE html><html><head><title>Imp color test</title><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script><script src="lib/imp.js"></script></head><body><h1>Imp color demo</h1><div><a href="index.html">Graph demo</a></div><div><canvas id="colors" width="1200" height="800"></canvas></div><script type="text/javascript">window.requestAnimationFrame(function () {
+<!DOCTYPE html><html><head><title>Imp color test</title><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/lodash/4.17.4/lodash.min.js"></script><script src="lib/imp.js"></script></head><body><h1>Imp color demo</h1><div><a href="index.html">Graph demo</a></div><div><canvas id="colors" width="1900" height="800"></canvas></div><script type="text/javascript">window.requestAnimationFrame(function () {
     var Color = Imp.Color;
+    var ColorGenerator = Imp.ColorGenerator;
     var Palette = Imp.Palette;
 
     var ctx = $('#colors')[0].getContext('2d');
@@ -88,28 +89,24 @@
 
     var kp = [[-0.2, 2.2], [3.0, -1.2], [6.0, -2.2], [5.5, 2.0]];
 
+    var l_min = 0.2;
+    var l_max = 0.8;
+    var limit_amount = 0.75;
+
+    var helix_count = 12;
     for (var k = 0; k < 4; k++) {
-        for (var i = 0; i < 12; i++) {
-            var srgb = Color.generate_color(i, 11.0, kp[k][0], kp[k][1]);
+        var colours = ColorGenerator.helix(helix_count, kp[k][0], kp[k][1], l_min, l_max, limit_amount)
 
-            var lum = 0.2126 * srgb.r + 0.7152 * srgb.g + 0.0722 * srgb.b;
-
-            var above_ratio = (1.0 - lum) / (Math.max(srgb.r, srgb.g, srgb.b, 1.0) - lum);
-            var below_ratio = (0.0 - lum) / (Math.min(srgb.r, srgb.g, srgb.b, 0.0) - lum);
-            var ratio = Math.min(above_ratio, below_ratio);
-            var rlum = lum * (1.0 - ratio);
-
-            var msrgb = new Color.RGBColor(srgb.r * ratio + rlum, srgb.g * ratio + rlum, srgb.b * ratio + rlum);
-
-            if (srgb.r > 1.0 || srgb.r < 0.0 || srgb.g > 1.0 || srgb.g < 0.0 || srgb.b > 1.0 || srgb.b < 0.0) {
-                ctx.fillStyle = Color.srgb_to_rgb_string(srgb);
-                ctx.fillRect(900 + k * 60, i * 50, 10, 45);
-                ctx.fillStyle = Color.srgb_to_rgb_string(msrgb);
-                ctx.fillRect(910 + k * 60, i * 50, 40, 45);
-            } else {
-                ctx.fillStyle = Color.srgb_to_rgb_string(srgb);
-                ctx.fillRect(900 + k * 60, i * 50, 50, 45);
-            }
+        for (var i = 0; i < helix_count; i++) {
+            ctx.fillStyle = Color.srgb_to_rgb_string(colours[i]);
+            ctx.fillRect(900 + k * 60, i * (600 / helix_count), 50, (600 / helix_count) - 5);
         }
+    }
+
+    var golden_helix_count = 24;
+    var golden_helix_colours = ColorGenerator.golden_helix(golden_helix_count, l_min, l_max, limit_amount);
+    for (var c = 0; c < golden_helix_count; c++) {
+        ctx.fillStyle = Color.srgb_to_rgb_string(golden_helix_colours[c]);
+        ctx.fillRect(1140, c * (600 / golden_helix_count), 50, (600 / golden_helix_count) - 5);
     }
 });</script></body></html>

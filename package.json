@@ -19,7 +19,7 @@
   "author": "Divan Burger",
   "dependencies": {
     "async": "^2.5.0",
-    "node-sass": "^4.5.3",
+    "node-sass": "^4.9.3",
     "npm-watch": "^0.2.0",
     "pug": "^2.0.0-beta6"
   }
